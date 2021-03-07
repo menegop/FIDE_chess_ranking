@@ -131,7 +131,7 @@ def process_players():
     print(df.head())
     print(split_by_index(rows[0], positions))
 
-def load_data():
+def load_ranking():
     df = pd.read_csv("processed_dataset/global.csv")
     df['date'] = pd.to_datetime(df["date"], format='%d/%m/%Y')
     return df.iloc[:,1:]
@@ -139,25 +139,3 @@ def load_players():
     df = pd.read_csv("processed_dataset/players.csv")
     return df.iloc[:, 1:]
 
-
-data = load_data()
-del(data["name"]) #we already have the name
-#process_players()
-#collect_data(download=False)
-players = load_players()
-print(data[data["title"]=="c"].elo.mean())
-print(data[data["title"]=="f"].elo.mean())
-print(data[data["title"]=="m"].elo.mean())
-print(data[data["title"]=="g"].elo.mean())
-print(players.head())
-#Do this only the first time
-#collect_data(download=False)
-#process_players()
-
-
-
-print(data["title"].value_counts())
-joined = pd.merge(players, data, how='inner', on='id')
-#joined = joined[joined["birth_year"]!=0]
-#print(joined.head())
-print(joined)
