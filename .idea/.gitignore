@@ -1,0 +1,9 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Datasource local storage ignored files
+/../../../../../../:\Users\meneg\PycharmProjects\FIDE_chess_ranking\.idea/dataSources/
+processed_dataset/global.csv
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
