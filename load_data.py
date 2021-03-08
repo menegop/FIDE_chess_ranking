@@ -88,9 +88,9 @@ def convert2df(m, month, year):
     print(df.head())
     return df
 
-def download_df(month, year):
+def download_df(m, month, year):
     download_file(month, year)
-    df = convert2df(month, year)
+    df = convert2df(m, month, year)
     return df
 
 #create the dataframe using all files
@@ -114,7 +114,39 @@ def collect_data(download=True):
     hist_df.loc[~hist_df["title"].isin(list_tit), "title"] = ""
     hist_df.to_csv("processed_dataset/global.csv")
 
-
+#collect all data from a dataframe in the recent format
+def convert2df_recent(m, month, year):
+    zip_name = f'dataset/{month}-{year}.zip'
+    try:
+        zf = zipfile.ZipFile(zip_name)  # having First.csv zipped file.
+        file = zf.open(zf.namelist()[0])
+    except:
+        return pd.DataFrame([[]])
+    #calculate date
+    date_str = f"01/{m + 1}/{year}"
+    date = datetime.strptime(date_str, '%d/%m/%Y').strftime('%d/%m/%Y')
+    text = str(file.read())
+    text = text[2:]
+    rows = text.split("\\r\\n")
+    first_row = rows[0]
+    #in some cases there is no header
+    positions = [ [0,15], [15,76], [76,80], [80, 84], [84,87], [112,119], [126,132] ]
+    print(date)
+    data_list = []
+    for row in rows[1:]:
+        data_list.append(split_by_index(row, positions))
+    df = pd.DataFrame(data_list)
+    df.rename(columns={0: 'id', 1: 'name', 2: 'country',  3: 'sex', 4:'title', 5:'elo', 6:'birth_year'}, inplace=True)
+    df.elo = pd.to_numeric(df.elo, errors='coerce')
+    print("missing", df["elo"].isnull().sum())
+    df = df.dropna()
+    df["elo"] = df["elo"].astype(float)
+    #minimum elo value retained
+    #MIN_ELO = 2200
+    #df =df[df.elo>MIN_ELO]
+    df["date"] = date
+    df.to_csv(f"processed_dataset/{month}-{year}.csv")
+    return df
 
 def process_players():
     file_name = "dataset/players_list_foa.txt"
@@ -131,33 +163,16 @@ def process_players():
     print(df.head())
     print(split_by_index(rows[0], positions))
 
-def load_data():
+def load_ranking():
     df = pd.read_csv("processed_dataset/global.csv")
     df['date'] = pd.to_datetime(df["date"], format='%d/%m/%Y')
     return df.iloc[:,1:]
 def load_players():
     df = pd.read_csv("processed_dataset/players.csv")
     return df.iloc[:, 1:]
+def load_mar21():
+    df = pd.read_csv("processed_dataset/mar-2021.csv")
+    df['date'] = pd.to_datetime(df["date"], format='%d/%m/%Y')
+    return df.iloc[:,1:]
 
-
-data = load_data()
-del(data["name"]) #we already have the name
-#process_players()
-#collect_data(download=False)
-players = load_players()
-print(data[data["title"]=="c"].elo.mean())
-print(data[data["title"]=="f"].elo.mean())
-print(data[data["title"]=="m"].elo.mean())
-print(data[data["title"]=="g"].elo.mean())
-print(players.head())
-#Do this only the first time
-#collect_data(download=False)
-#process_players()
-
-
-
-print(data["title"].value_counts())
-joined = pd.merge(players, data, how='inner', on='id')
-#joined = joined[joined["birth_year"]!=0]
-#print(joined.head())
-print(joined)
+#convert2df_recent(2, "mar", "2021")
